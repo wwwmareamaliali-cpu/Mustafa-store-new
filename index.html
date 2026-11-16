@@ -1566,8 +1566,7 @@
       }
       document.getElementById('modal-prod-name').focus();
     }
-
-    function saveProductForm(productId, addAnother = false) {
+    async function saveProductForm(productId, addAnother = false) {
       const doorId = document.getElementById('modal-prod-door').value;
       const groupId = document.getElementById('modal-prod-group').value;
       const name = document.getElementById('modal-prod-name').value.trim();
@@ -1613,6 +1612,15 @@
           wholesalePrice
         });
       }
+
+  // إرسال المنتج إلى قاعدة بيانات Supabase
+  if (!productId) {
+    const finalImage = media || 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&q=80';
+    const { error } = await _supabase
+      .from('products')
+      .insert([{ name: name, price: singlePrice, image_url: finalImage }]);
+    if (error) console.error('خطأ في الحفظ السحابي:', error.message);
+  }
 
       saveDataLocally();
       switchAdminTab('products');
@@ -1933,68 +1941,6 @@
       }, 3500);
     }
   </script>
-     <!-- رأس الصفحة -->
-    <header class="bg-white shadow-sm py-4 mb-6">
-        <div class="container mx-auto px-4 text-center">
-            <h1 class="text-2xl font-bold text-gray-800">محل مصطفى ١ (Mustafa-Shop 1)</h1>
-            <p class="text-sm text-gray-500 mt-1">أفضل المنتجات بأفضل الأسعار المفرد والجملة</p>
-        </div>
-    </header>
-
-    <!-- محتوى المتجر وعرض المنتجات -->
-    <main class="container mx-auto px-4 py-4">
-        <h2 class="text-xl font-semibold text-gray-700 mb-4">قائمة المنتجات</h2>
-        
-        <!-- حاوية عرض المنتجات -->
-        <div id="products-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            <!-- سيتم تعبئة المنتجات هنا تلقائياً عبر الكود -->
-            <p class="text-center col-span-full text-gray-500 py-8">جاري تحميل المنتجات...</p>
-        </div>
-    </main>
-
-    <!-- كود الاتصال وجلب المنتجات من Supabase -->
-    <script>
-        // بيانات الاتصال الخاصة بمشروعك
-        const SUPABASE_URL = 'https://gdsohieqwaoipuxejbfv.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_bmYRRlIu2JwvIuauGQCc7g_HiLPTXf1';
-        
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        // دالة جلب وعرض المنتجات
-        async function fetchProducts() {
-            const container = document.getElementById('products-container');
-
-            const { data, error } = await _supabase.from('products').select('*');
-
-            if (error) {
-                console.error('خطأ في جلب المنتجات:', error.message);
-                container.innerHTML = <p class="text-center col-span-full text-red-500">تعسّر تحميل المنتجات: ${error.message}</p>;
-                return;
-            }
-
-            if (!data || data.length === 0) {
-                container.innerHTML = '<p class="text-center col-span-full text-gray-500 py-8">لا توجد منتجات مضافة في قاعدة البيانات حالياً.</p>';
-                return;
-            }
-
-            // تفريغ الحاوية وبناء كروت المنتجات
-            container.innerHTML = '';
-
-            data.forEach(product => {
-                container.innerHTML += 
-                    <div class="bg-white border rounded-lg shadow-md overflow-hidden flex flex-col transition hover:shadow-lg">
-                        <img src="${product.image_url || 'https://via.placeholder.com/300'}" alt="${product.name || 'منتج'}" class="w-full h-48 object-cover bg-gray-100">
-                        <div class="p-4 flex flex-col flex-grow">
-                            <h3 class="font-bold text-lg text-gray-800 mb-2">${product.name || 'بدون اسم'}</h3>
-                            <p class="text-emerald-600 font-bold text-lg mt-auto">${product.price ? product.price + ' دينار' : 'السعر غير متوفر'}</p>
-                        </div>
-                    </div>
-                ;
-            });
-        }
-
-        // تنفيذ الدالة فور تحميل الصفحة
-        fetchProducts();
-    </script>
+   
 </body>
 </html>
